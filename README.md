@@ -37,12 +37,19 @@ The project is organized into two main components:
     - **Extensible Design**: Allows easy integration of new key sources and derivation methods in the `key/` directory.
     - **Utilities**: Helper functions and logging utilities are stored in the `utils/` directory.
 3. **Supporting Files and Scripts**:
+    - **`driver.py`**: Client driver script to interact with the hybridization module.
+    - **`hybridization_module.py`**: Entry point for the hybridization module.
+   
+   **DockerConfigs**
     - **`Dockerfile`**: Defines the final container image, including runtime dependencies, environment setup, and execution commands.
     - **`Docker.base`**: Creates a reusable base image with pre-installed dependencies to speed up builds.
     - **`Docker-compose.yml`**: Defines multi-container orchestration, networking, and environment configurations for running multiple nodes.
-    - **`driver.py`**: Client driver script to interact with the hybridization module.
-    - **`hybridization_module.py`**: Entry point for the hybridization module.
+   
+   **Certificates**
+    - **`create_ca.sh`**: Helper script to generate the CA key and certificate before running the system.
     - **`generate_cert.sh`**: Script to generate node certificates.
+   
+   **Requests**
     - **`open_connect_request.json`**: Contains the ETSI 004 request, defining specific key exchange features between nodes.
 
 Together, these components enable the nodes in the network to establish trusted connections and dynamically derive shared cryptographic keys.
@@ -50,6 +57,18 @@ Together, these components enable the nodes in the network to establish trusted 
 
 # Quick Start: Command Summary
 
+### 0. **Certificate Setup**
+
+Before launching the hybridization modules, one must generate a Root CA certificate and key that will be used to sign each node's certificate.
+
+Run the following command from the project root to create a ca/ folder with the necessary files:
+
+```bash
+bash certificates/create_ca.sh
+```
+
+This script creates the ca/ folder with the CA key and certificate.
+These are required for each node to auto-generate and sign its own certificate at startup, enabling secure TLS communication.
 ### 1. **Build the Hybridization Module Base Image**
 
 Create a reusable base image with all necessary dependencies to speed up builds:
