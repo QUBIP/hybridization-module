@@ -5,14 +5,6 @@
 - [Introduction](#introduction)
    * [Project Structure](#project-structure)
    * [Quick Start: Command Summary](#quick-start-command-summary)
-- [How It Works](#how-it-works)
-  * [1. Node Configuration:](#1-node-configuration)
-  * [2. Docker Network & Image Setup](#2-Docker-network-and-image-setup**)
-  * [3. Hybridization Module Initialization](#3-hybridization-module-initialization)
-  * [4. Running the Driver and Executing the ETSI 004 Workflow](#4-running-the-driver-and-executing-the-etsi-004-workflow)
-- [ETSI 004 Workflow](#etsi-004-workflow)
-- [OPEN_CONNECT Request](#open_connect-request)
-- [TLS Certificate for Secure Socket Establishment](#tls-certificate-for-secure-socket-establishment)
 
 # Introduction 
 This project is a possible implementation of a secure and scalable framework for cryptographic key hybridization exchange 
