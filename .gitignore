@@ -103,4 +103,5 @@ KDFix/liboqs
 #venv
 venv/
 **/venv/
+.venv
 

@@ -1,0 +1,46 @@
+# Docker compose used to simulate 3 hybrization modules
+# Use driver.py (inside the dockers) to test the modules
+
+networks:
+  hybrid_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.10.11.0/24
+
+services:
+  node_a:
+    container_name: hm_node_a
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        CFGFILE: "config/Alice/config.json"
+        TRUSTED_PEERS_INFO: "config/Alice/trusted_peers_info.json"
+    networks:
+      hybrid_network:
+        ipv4_address: 10.10.11.245  # Static IP for Node A
+
+  node_b:
+    container_name: hm_node_b
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        CFGFILE: "config/Bob/config.json"
+        TRUSTED_PEERS_INFO: "config/Bob/trusted_peers_info.json"
+    networks:
+      hybrid_network:
+        ipv4_address: 10.10.11.246  # Static IP for Node B
+
+  node_c:
+    container_name: hm_node_c
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        CFGFILE: "config/Charlie/config.json"
+        TRUSTED_PEERS_INFO: "config/Charlie/trusted_peers_info.json"
+    networks:
+      hybrid_network:
+        ipv4_address: 10.10.11.247  # Static IP for Node B

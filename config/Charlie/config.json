@@ -1,0 +1,33 @@
+{
+  "uuid" : "cccccccc-cccc-cccc-cccc-cccccccccccc",
+
+  "logging_config" : {
+    "console_log_type" : "info",
+    "colorless_console_log" : false,
+
+    "file_log_type" : "debug",
+    "filename" : "hybrid.log"
+  },
+
+  "certificate_config" : {
+    "certificate_ip" : "10.10.11.247",
+    "cert_authority_path" : "/app/ca/ca.crt",
+    "cert_path" : "/app/certs/node.crt",
+    "key_path" : "/app/certs/node.key"
+  },
+
+  "hybridization_server_address": {
+    "host" : "10.10.11.247",
+    "port" : 65430
+  },
+
+  "qkd_address": {
+    "host" : "192.168.222.1",
+    "port" : 54001
+  },
+
+  "peer_local_address": {
+    "host" : "10.10.11.247",
+    "port" : 3001
+  }
+}
