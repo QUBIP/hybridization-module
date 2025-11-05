@@ -418,6 +418,21 @@ While the key extraction process is usually simplified in Quantum Key Distributi
 
 <br>
 
+- **Classic-McEliece-348864**
+- **Classic-McEliece-460896**
+- **Classic-McEliece-6688128**
+- **Classic-McEliece-6960119**
+- **Classic-McEliece-8192128**
+
+- **Classic-McEliece-348864f**
+- **Classic-McEliece-460896f**
+- **Classic-McEliece-6688128f**
+- **Classic-McEliece-6960119f**
+- **Classic-McEliece-8192128f**
+
+
+<br>
+
 - **HQC-128**
 - **HQC-192**
 - **HQC-256**
@@ -442,8 +457,11 @@ While the key extraction process is usually simplified in Quantum Key Distributi
 
 - **FrodoKEM-640-AES**
 - **FrodoKEM-976-AES**
+- **FrodoKEM-1344-AES**
+
 - **FrodoKEM-640-SHAKE**
 - **FrodoKEM-976-SHAKE**
+- **FrodoKEM-1344-SHAKE**
 
 ### **Hybridization methods**
 

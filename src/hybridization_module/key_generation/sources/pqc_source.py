@@ -16,6 +16,7 @@ from hybridization_module.model.shared_enums import (
 )
 from hybridization_module.model.shared_types import NetworkAddress, PeerSessionReference
 from hybridization_module.peer_connector.connector_interface import PeerConnectionManager
+from hybridization_module.utils.io_utils import receive_nbytes
 
 log = logging.getLogger(__name__)
 
@@ -93,7 +94,7 @@ class PQCSource(KeySource):
         self.secure_socket.sendall(public_key)
         log.debug("[CLIENT] Server received public key. Waiting for ciphertext...")
 
-        ciphertext = self.secure_socket.recv(self.kem.details["length_ciphertext"])
+        ciphertext = receive_nbytes(self.secure_socket, self.kem.details["length_ciphertext"])
         log.debug("[CLIENT] Received ciphertext, starting decapsulation...")
 
         shared_secret= self.kem.decap_secret(ciphertext)
@@ -104,7 +105,7 @@ class PQCSource(KeySource):
     def _server_side_get_key(self) -> bytes:
 
         # SEVER: Receives public key from the secure socket and sends the ciphertext.
-        public_key = self.secure_socket.recv(self.kem.details["length_public_key"])
+        public_key = receive_nbytes(self.secure_socket, self.kem.details["length_public_key"])
         log.debug("[SERVER] Received public key, encapsulating secret...")
 
         ciphertext, shared_secret = self.kem.encap_secret(public_key)
