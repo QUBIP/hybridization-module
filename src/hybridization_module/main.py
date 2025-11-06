@@ -1,8 +1,10 @@
 # hybridization_module.py
 import json
 import os
+import signal
 import subprocess
 import sys
+from types import FrameType
 
 sys.path.append(os.getenv("SRC_PATH"))
 
@@ -55,6 +57,19 @@ def sign_certificates(node_ip: str) -> None:
         print("Certificates generated successfully!")
     else:
         print(f"Warning: Certificate script {cert_script} not found!")
+
+## Signal handling
+
+def stop_hybridization_module(signum: int, frame: FrameType) -> None:
+    global server
+
+    server.shutdown()
+    sys.exit(0)
+
+
+# Closing signals
+signal.signal(signal.SIGTERM, stop_hybridization_module) # SIGTERM
+signal.signal(signal.SIGINT, stop_hybridization_module) # SIGINT
 
 
 # Run the KDFix Hybridization Module

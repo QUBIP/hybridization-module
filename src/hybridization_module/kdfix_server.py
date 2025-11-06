@@ -3,7 +3,6 @@
 import json
 import logging
 import socket
-import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
@@ -29,7 +28,7 @@ class Etsi004Server():
 
         ## Initialize the peer connector
         self.peer_manager: PeerConnectionManager = PeerToPeerConnectionManager(self.config.peer_local_address, config.certificate_config)
-
+        self.thread_pool: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=10, thread_name_prefix="request")
 
     def _process_request(self, request: dict) -> dict:
         """
@@ -142,22 +141,19 @@ class Etsi004Server():
 
     def start_server(self) -> None:
         self.peer_manager.start_listening()
-        thread_pool = ThreadPoolExecutor(max_workers=10, thread_name_prefix="request")
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
             server_socket.bind(self.config.hybridization_server_address.to_tuple())
             server_socket.listen()
             log.info("Server listening on %s", self.config.hybridization_server_address)
 
-            try:
-                while True:
-                    conn, addr = server_socket.accept()
-                    thread_pool.submit(self._handle_connection, conn, NetworkAddress.from_tuple(addr))
-
-            except KeyboardInterrupt:
-                thread_pool.shutdown(wait=True)
-                self.peer_manager.stop_listening()
-                log.info("Shutting down server gracefully...")
-                sys.exit(0)
+            while True:
+                conn, addr = server_socket.accept()
+                self.thread_pool.submit(self._handle_connection, conn, NetworkAddress.from_tuple(addr))
 
 
+    def shutdown(self) -> None:
+
+        self.thread_pool.shutdown(wait=True)
+        self.peer_manager.stop_listening()
+        log.info("Shutting down server gracefully...")

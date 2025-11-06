@@ -134,7 +134,7 @@ class PeerToPeerConnectionManager(PeerConnectionManager):
             return
 
         self._continue_listening = False
-        sock = self._connect_as_client(self.address, PeerSessionReference(PeerSessionType.BLINK, "blink"))
+        sock = self._connect_as_client(self.address, PeerSessionReference(type=PeerSessionType.BLINK, id="blink"))
         sock.close()
 
         self._listening_thread.join()
