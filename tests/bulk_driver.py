@@ -46,8 +46,8 @@ def create_open_connect_request(driver_id: int) -> dict:
     return {
         "command": "OPEN_CONNECT",
         "data": {
-            "source": f"hybrid://SPI_{driver_id}@aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa?hybridization=xoring&kem_mec=ML-KEM-512",
-            "destination": f"hybrid://SPI_{driver_id}@bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb?hybridization=xoring&kem_mec=ML-KEM-512",
+            "source": f"hybrid://SPI_{driver_id}@aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa?hybridization=xoring&key_sources=ML-KEM-512,QKD",
+            "destination": f"hybrid://SPI_{driver_id}@bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb?hybridization=xoring&key_sources=ML-KEM-512,QKD",
             "qos": {
                 "key_chunk_size": 32,
                 "max_bps": 32,

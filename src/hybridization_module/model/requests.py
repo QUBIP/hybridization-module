@@ -3,7 +3,7 @@ from urllib.parse import parse_qs, urlparse
 
 from pydantic import BaseModel
 
-from hybridization_module.model.shared_enums import HybridizationMethod, PqcAlgorithm
+from hybridization_module.model.shared_enums import HybridizationMethod, KeyExtractionAlgorithm
 
 # OPEN CONNECT
 
@@ -22,7 +22,7 @@ class OpenConnectUriParameters(BaseModel):
     source_uuid: str
     destination_uuid: str
     hybrid_method: HybridizationMethod
-    pqc_algorithm: PqcAlgorithm
+    key_algorithms: list[KeyExtractionAlgorithm]
 
 
 class OpenConnectRequest(BaseModel):
@@ -43,13 +43,18 @@ class OpenConnectRequest(BaseModel):
 
         parsed_qs = parse_qs(parsed_source_uri.query)
         hybrid_method = HybridizationMethod(parsed_qs["hybridization"][0])
-        pqc_kem_mec = PqcAlgorithm(parsed_qs["kem_mec"][0])
+
+        query_key_sources = parsed_qs["key_sources"][0].split(",")
+        key_algorithms = []
+
+        for algorithm in query_key_sources:
+            key_algorithms.append(KeyExtractionAlgorithm(algorithm))
 
         uri_params = OpenConnectUriParameters(
             source_uuid=source_uuid,
             destination_uuid=destination_uuid,
             hybrid_method=hybrid_method,
-            pqc_algorithm=pqc_kem_mec
+            key_algorithms=key_algorithms
         )
         return uri_params
 

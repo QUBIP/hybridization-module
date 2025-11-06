@@ -10,9 +10,9 @@ from hybridization_module.model.exceptions import PqcError
 from hybridization_module.model.requests import OpenConnectQos
 from hybridization_module.model.shared_enums import (
     ConnectionRole,
+    KeyExtractionAlgorithm,
     KeyType,
     PeerSessionType,
-    PqcAlgorithm,
 )
 from hybridization_module.model.shared_types import NetworkAddress, PeerSessionReference
 from hybridization_module.peer_connector.connector_interface import PeerConnectionManager
@@ -26,7 +26,8 @@ class PQCSource(KeySource):
         peer_manager: PeerConnectionManager,
         peer_address: NetworkAddress,
         role: ConnectionRole,
-        kem_algorithm: PqcAlgorithm = PqcAlgorithm.KYBER512,
+        kem_algorithm: KeyExtractionAlgorithm = KeyExtractionAlgorithm.KYBER512,
+        kem_appearance_index: int = 0,
         sig_algorithm: str = None) -> None:
         """
         Initializes the PQC Link using the node, and with a specified KEM and optional signature mechanism.
@@ -36,6 +37,7 @@ class PQCSource(KeySource):
             peer_addres (NetworkAddress): The address of the hybridization with which the key is going to be generated.
             role (ConnectionRole): The role the local hybridization module is going to take in the connection.
             kem_algorithm (str): The KEM algorithm to use (default: 'Kyber512').
+            kem_appearance_index (int): The number of souces that have the same kem_algorithm when the PQCSource was created.
             sig_algorithm (str): The signature algorithm to use (optional).
         """
         self.id: str = f"{self.get_key_type()}-{uuid4()}"
@@ -43,7 +45,8 @@ class PQCSource(KeySource):
 
         self.peer_manager: PeerConnectionManager = peer_manager
         self.peer_address: NetworkAddress = peer_address
-        self.kem_algorithm: PqcAlgorithm = kem_algorithm
+        self.kem_algorithm: KeyExtractionAlgorithm = kem_algorithm
+        self.kem_appearance_index: int = kem_appearance_index
         self.sig_algorithm = sig_algorithm
         self.role: ConnectionRole = role
         self.key_stream_id: str = None
@@ -57,7 +60,7 @@ class PQCSource(KeySource):
         log.debug("Configuration loaded:")
         log.debug("Role=%s", role)
         log.debug("KEM Mechanism=%s", self.kem_algorithm)
-        # Initialize OQS KEM object
+        log.debug("Appearance_index=%s", self.kem_appearance_index)
 
         if self.sig_algorithm:
             log.debug("Digital Signature Mechanism=%s", self.sig_algorithm)
@@ -79,7 +82,8 @@ class PQCSource(KeySource):
         Starts the socket connection between the peers so that they can exchange PQC information.
         """
 
-        peer_session_ref = PeerSessionReference(type=PeerSessionType.PQC, id=hybrid_ksid)
+        peer_session_id = f"{self.kem_algorithm}-{self.kem_appearance_index}-{hybrid_ksid}"
+        peer_session_ref = PeerSessionReference(type=PeerSessionType.PQC, id=peer_session_id)
         self.secure_socket = self.peer_manager.connect_peer(peer_session_ref, self.role, self.peer_address)
         self.key_stream_id = hybrid_ksid
 

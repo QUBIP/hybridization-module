@@ -18,6 +18,7 @@ from hybridization_module.key_generation.key_source_threads import (
 from hybridization_module.key_generation.sources.pqc_source import PQCSource
 from hybridization_module.key_generation.sources.qkd_source import QKDSource
 from hybridization_module.model.config import GeneralConfiguration, PeerInfo
+from hybridization_module.model.converters import KEY_ALGORITHM_TO_KEY_TYPE
 from hybridization_module.model.exceptions import PeerNotConnectedError
 from hybridization_module.model.requests import (
     CloseRequest,
@@ -29,6 +30,8 @@ from hybridization_module.model.requests import (
 from hybridization_module.model.shared_enums import (
     ConnectionRole,
     HybridizationMethod,
+    KeyExtractionAlgorithm,
+    KeyType,
     PeerSessionType,
 )
 from hybridization_module.model.shared_types import NetworkAddress, PeerSessionReference
@@ -72,7 +75,7 @@ class Etsi004Session:
 
         if peer_uuid not in peers_info:
             log.error("The hybridization module with uuid %s is not registered.", peer_uuid)
-            return {"status" : 1, "message" : f"The hybridization module with uuid {peer_uuid} is not registered."}
+            return {"status" : 1, "message" : f"The hybridization module with uuid {peer_uuid} is not registered."} #TODO I think since this is the __init__ method this will fail
 
         peer: PeerInfo = peers_info[peer_uuid]
         log.debug("Found the peer connection information %s.", peer)
@@ -80,17 +83,40 @@ class Etsi004Session:
         ## Get the key sources
 
         key_sources: dict[str, KeySource] = {}
+        algorithm_appearances: dict[KeyExtractionAlgorithm, int] = {}
 
-        qkd_source = QKDSource(uri_params, node_config.qkd_address)
-        key_sources[qkd_source.get_id()] = qkd_source
+        for key_algorithm in uri_params.key_algorithms:
+            key_type = KEY_ALGORITHM_TO_KEY_TYPE[key_algorithm]
 
-        pqc_source = PQCSource(
-            peer_manager=peer_manager,
-            peer_address=peer.address,
-            role=connection_role,
-            kem_algorithm=uri_params.pqc_algorithm
-        )
-        key_sources[pqc_source.get_id()] = pqc_source
+            # Track the number of times an algorithm has appeared
+            if key_algorithm in algorithm_appearances:
+                algorithm_appearances[key_algorithm] += 1
+            else:
+                algorithm_appearances[key_algorithm] = 0
+
+
+            if key_type == KeyType.QKD:
+                key_source = QKDSource(uri_params, node_config.qkd_address)
+
+            elif key_type == KeyType.PQC:
+                key_source = PQCSource(
+                    peer_manager=peer_manager,
+                    peer_address=peer.address,
+                    role=connection_role,
+                    kem_algorithm=key_algorithm,
+                    kem_appearance_index=algorithm_appearances[key_algorithm]
+                )
+
+            else:
+                log.error("The key type %s (obtained from the algorithm %s) is not supported.", key_type, key_algorithm)
+                continue
+
+            log.info("Adding the algorithm %s as the key_source %s", key_algorithm, key_source.get_id())
+            key_sources[key_source.get_id()] = key_source
+
+        if len(key_sources) == 0:
+            raise ValueError("None of the provided algorithms are supported.")
+
         log.debug("Key sources initialized %s", key_sources)
 
         ## Initializing instance variables

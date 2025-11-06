@@ -55,8 +55,13 @@ class HybridizationMethod(CaseInsensitiveStrEnum):
     XORHMAC = "xorhmac"
 
 
-class PqcAlgorithm(CaseInsensitiveStrEnum):
-    # Marked with an X, the algorithms that currently do not work
+class KeyExtractionAlgorithm(CaseInsensitiveStrEnum):
+
+    #### QKD ####
+
+    QKD = "QKD"
+
+    #### PQC ####
 
     ### Inherited from liboqs ###
 

@@ -1,8 +1,8 @@
 {
     "command": "OPEN_CONNECT",
     "data": {
-        "source": "hybrid://SPI_5@cccccccc-cccc-cccc-cccc-cccccccccccc?hybridization=xoring&kem_mec=ML-KEM-512",
-        "destination": "hybrid://SPI_5@bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb?hybridization=xoring&kem_mec=ML-KEM-512",
+        "source": "hybrid://SPI_5@cccccccc-cccc-cccc-cccc-cccccccccccc?hybridization=xoring&key_sources=ML-KEM-512,QKD",
+        "destination": "hybrid://SPI_5@bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb?hybridization=xoring&key_sources=ML-KEM-512,QKD",
         "qos": {
             "key_chunk_size": 32,
             "max_bps": 32,

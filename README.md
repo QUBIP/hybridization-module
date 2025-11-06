@@ -358,8 +358,8 @@ Example of `open_connect_request.json` (for node `aaaaaaaa-aaaa-aaaa-aaaa-aaaaaa
 {
     "command": "OPEN_CONNECT",
     "data": {
-        "source": "hybrid://SPI_1@aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa?hybridization=xoring&kem_mec=Kyber512",
-        "destination": "hybrid://SPI_1@bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb?hybridization=xoring&kem_mec=Kyber512",
+        "source": "hybrid://SPI_1@aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa?hybridization=xoring&key_sources=ML-KEM-512,QKD",
+        "destination": "hybrid://SPI_1@bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb?hybridization=xoring&key_sources=ML-KEM-512,QKD",
         "qos": {
             "key_chunk_size": 32,
             "max_bps": 32,
@@ -390,7 +390,7 @@ The `data` field contains the core details required for the connection and key e
 
   **Structure:**
       ```
-      hybrid://<name>@<UUID>?hybridization=<method>&kem_mec=<PQC KEM>
+      hybrid://<name>@<UUID>?hybridization=<method>&key_sources=<KEY SOURCE>,<KEY SOURCE>,<...>
       ```
 
   * **Schema**: Indicates that the request involves hybrid key exchange. `hybrid://`
@@ -399,7 +399,7 @@ The `data` field contains the core details required for the connection and key e
 
     + `hybridization`: Specifies the hybridization method. See all the options [here](#hybridization-methods).
 
-    +  `kem_mec`: Specifies the Post-Quantum Cryptography (PQC) key encapsulation mechanism. See all the options [here](#hybridization-methods)
+    +  `key_sources`: Specifies the key sources (QKD, PQC algorithms, etc) from which the key is going to be extracted. See all the options [here](#key-sources).
 
 - **QoS (Quality of Service)**: Describes the characteristics of the requested key. Currently the only qos that is taken into account is the key_chunk_size
   * `key_chunk_size`: The size of the key buffer in bytes.
@@ -410,7 +410,11 @@ Properly formatted **OPEN_CONNECT** requests ensure that both nodes synchronize 
 
 ### **Key sources**
 
-While the key extraction process is usually simplified in Quantum Key Distribution (QKD) and Post Quantum Criptography (PQC), PQC refers to a considerable number of algorithms, the current implementation supports the following options when picking a pqc algorithm:
+While the key extraction process is usually simplified in Quantum Key Distribution (QKD) and Post Quantum Criptography (PQC). PQC, for example, refers to a considerable number of algorithms, the current implementation supports the following options when picking a key source:
+
+- **QKD**
+
+<br>
 
 - **BIKE-L1**
 - **BIKE-L3**
