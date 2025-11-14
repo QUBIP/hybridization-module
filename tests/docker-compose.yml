@@ -14,9 +14,16 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-      args:
-        CFGFILE: "config/Alice/config.json"
-        TRUSTED_PEERS_INFO: "config/Alice/trusted_peers_info.json"
+    environment:
+      - CFGFILE=config/Alice/config.json
+      - TRUSTED_PEERS_INFO=config/Alice/trusted_peers_info.json
+    volumes:
+      - type: bind
+        source: ../config
+        target: /app/config
+      - type: bind
+        source: .
+        target: /app/tests/
     networks:
       hybrid_network:
         ipv4_address: 10.10.11.245  # Static IP for Node A
@@ -26,9 +33,16 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-      args:
-        CFGFILE: "config/Bob/config.json"
-        TRUSTED_PEERS_INFO: "config/Bob/trusted_peers_info.json"
+    environment:
+      - CFGFILE=config/Bob/config.json
+      - TRUSTED_PEERS_INFO=config/Bob/trusted_peers_info.json
+    volumes:
+      - type: bind
+        source: ../config
+        target: /app/config
+      - type: bind
+        source: .
+        target: /app/tests/
     networks:
       hybrid_network:
         ipv4_address: 10.10.11.246  # Static IP for Node B
@@ -38,9 +52,16 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-      args:
-        CFGFILE: "config/Charlie/config.json"
-        TRUSTED_PEERS_INFO: "config/Charlie/trusted_peers_info.json"
+    environment:
+      - CFGFILE=config/Charlie/config.json
+      - TRUSTED_PEERS_INFO=config/Charlie/trusted_peers_info.json
+    volumes:
+      - type: bind
+        source: ../config
+        target: /app/config
+      - type: bind
+        source: .
+        target: /app/tests/
     networks:
       hybrid_network:
         ipv4_address: 10.10.11.247  # Static IP for Node B

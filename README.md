@@ -171,8 +171,10 @@ Example of `trusted_peers_info.json`:
 
 This module is highly tied to docker and containerization, to the point that it has not been tested in other environments outside of docker. Therefore, setting up docker correctly is key for a successful installation. To run the Dockerfile correctly you must know the following things:
 
-- When building the docker image you must provide the following arguments:
-    - CFGFILE: The path to the [main configuration](#main-configuration) file you want to use for the image. For example, `config/Alice/config.json`
+- The configuration files are not stored in the container image, therefore, you must create a bind-mount volume that connects the configuration directories of the local machine and the container. In the [examples](#docker-deployment-examples) you can see how this can be done.
+
+- Besides the bind volume, when running the HM you must provide the following environment variables:
+    - CFGFILE: The path to the [main configuration](#main-configuration) file you want to use for the container. For example, `config/Alice/config.json`
     - TRUSTED_PEERS_INFO: The path to the [Trusted peer configuration](#trusted-peers-information) file containing all the information of the network. For example, `config/Alice/trusted_peers_info.json`
 
 - An instance of the module listens to two address at the same time, the address of the API server, which is the entrypoint for the clients that want to get key, and address that listens to other hybridization modules. Depending on your network configuration you may want to expose the ports, set up a docker network or do nothing (This last option is just if you are [testing the module in a local environment](#extra-testing-the-module-locally)).
@@ -183,10 +185,15 @@ Although you can use docker directly with the next commands:
 
 ```bash
 # Building
-docker build -t hybridization:1 -f Dockerfile . --build-arg CFGFILE="config/Alice/config.json" --build-arg TRUSTED_PEERS_INFO="config/Alice/trusted_peers_info.json"
+docker build -t hybridization:1 -f Dockerfile .
 
 # Running with both ports exposed
-docker run --name hybridization_module -p <host_hybridization_port>:<container_hybridization_port> -p <host_peer_port>:<container_peer_port> --rm hybridization:1
+docker run --name hybridization_module \
+--mount type=bind,src=<absolute/path/to/config/directory/in/source/machine>,dst=<absolute/path/to/config/directory/inside/the/container> \
+-e CFGFILE=<path/to/main/config/inside/container> \
+-e TRUSTED_PEERS_INFO=<path/to/trusted/peer/config/inside/container> \
+-p <host_hybridization_port>:<container_hybridization_port> \
+-p <host_peer_port>:<container_peer_port> --rm hybridization:1
 ```
 
 It is highly recommended to use something similar to docker compose, since it provides a clearer view of the whole configuration.
@@ -200,9 +207,13 @@ services:
     container_name: hybridization_module
     build:
       dockerfile: Dockerfile
-      args:
-        CFGFILE: "config/Alice/config.json"
-        TRUSTED_PEERS_INFO: "config/Alice/trusted_peers_info.json"
+    environment:
+      - CFGFILE=<path/to/main/config/inside/container>
+      - TRUSTED_PEERS_INFO=<path/to/trusted/peer/config/inside/container>
+    volumes:
+      - type: bind
+        source: <path/to/config/directory/in/source/machine>
+        target: <path/to/config/directory/inside/the/container>
     ports:
       - "<host_ip_address>:<host_hybridization_port>:<container_hybridization_port>"
       - "<host_ip_address>:<host_peer_port>:<container_peer_port>"
@@ -220,9 +231,13 @@ services:
     build:
       context: kdfix-docker/
       dockerfile: Dockerfile
-      args:
-        CFGFILE: "config/Alice/config.json"
-        TRUSTED_PEERS_INFO: "config/Alice/trusted_peers_info.json"
+    environment:
+      - CFGFILE=<path/to/main/config/inside/container>
+      - TRUSTED_PEERS_INFO=<path/to/trusted/peer/config/inside/container>
+    volumes:
+      - type: bind
+        source: <path/to/config/directory/in/source/machine>
+        target: <path/to/config/directory/inside/the/container>
     ports:
       - "<host_ip_address>:<host_peer_port>:<container_peer_port>"
     networks:
@@ -259,6 +274,8 @@ The building process of the image has 2 stages:
 
       In this stage docker creates a temporal image that will be used to build the liboqs library.
 
+      **WARNING:** Unlike the next step, which uses `python:3.11-slim-trixie` to reduce the size of the final container, the builder image uses the `python:3.11-trixie`. This is to speed up the building process, however, it also means that the building machine would have to install both base images (Which total around 1.5 GB). Nevertheless, if disk space is an issue in the production machine you can either export the final container image (~324MB) from another machine (recommend), or change the base image of the builder to `python:3.11-slim-trixie`.
+
    2. **Building the final image**
 
       Once the liboqs is built, we get the binaries and shared libraries from the temporal image and copy them to a new one. This avoid keeping unnecessary build programs/files that would only make the image heavier than it already is.
@@ -266,9 +283,7 @@ The building process of the image has 2 stages:
       Once those files are copied, we start copying the file from the hybridization module such as:
 
       - The Hybridization Module source files
-      - Node-specific configurations (`config.json`, `trusted_peers_info.json`)
       - Certificate generation scripts
-      - The scrips used to test the hybridization (driver.py).
 
 
 ### 3. Reading the logs
@@ -302,9 +317,29 @@ docker compose up --build
 
 Once the containers are up, you may use the driver scripts to test the module.
 
-Note: These modules are not connected by default to any QKD source, so you will receive error logs saying the connection to these devices have failed.
+Note: These modules are not connected by default to any QKD source, so if ask for QKD key_source you will receive error logs saying the connection to these devices have failed.
 
 #### Driver Scripts
+
+The "driver scripts" are series of python scripts that perform the ETSI 004 workflow in the Hybridization Module.
+
+These scripts are not included by default in the container image, therefore, they need to be added using a bind mount (This is already done if you use the [3 node simulation](#docker-compose-3-node-simulation)):
+
+-  **CLI docker:**
+
+    Add `--mount type=bind,src=<absolute/path/to/the/tests/directory>,dst=/app/tests` to the [docker run command](#docker-deployment-examples).
+
+-  **Docker compose:**
+
+    Add the following lines in the `volumes` secction of the [docker compose file](#docker-deployment-examples):
+
+    ```yaml
+    - type: bind
+      source: <path/to/tests/directory/in/source/machine>
+      target: /app/tests/
+    ```
+
+<br>
 
 After the Hybridization Module is initialized and is listening for requests, the **driver script** can be executed to perform ETSI 004 workflow and achieve key exchanges.
 Each container has its own driver, which interacts with the respective Hybridization Modules to manage connections and derive hybrid keys.
@@ -322,7 +357,7 @@ Steps to Run the Driver:
 
     Once inside the container, execute the driver script to initiate the ETSI 004 workflow to request hybrid key:
     ```bash
-    python3 driver.py
+    python3 tests/driver.py
     ```
 
     This step sends the required ETSI 004 commands (`OPEN_CONNECT`, `GET_KEY`, and `CLOSE`, [See more details](#modules-api)) to the Hybridization Module, initiating and managing the key exchange process.

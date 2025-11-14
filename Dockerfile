@@ -1,7 +1,7 @@
 # Dockerfile
 
 ## PART 1: Building liboqs, this image will only be used to build it, the real image is in PART 2
-FROM python:3.11 AS builder
+FROM python:3.11-trixie AS builder
 
 # Install build tools and dependencies
 RUN apt-get update && apt-get install -y \
@@ -10,10 +10,7 @@ RUN apt-get update && apt-get install -y \
     ninja-build \
     git \
     automake \
-    autoconf \
-    jq && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    autoconf
 
 
 WORKDIR /opt
@@ -32,17 +29,19 @@ RUN mkdir build && cd build && \
 
 # -------------------------------------
 ## PART 2: Final runtime image
-FROM python:3.11
-
-# Install runtime system dependencies
-RUN apt-get update && apt-get install -y \
-    openssl \
-    ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+FROM python:3.11-slim-trixie
 
 # Copy liboqs shared libraries and headers from the builder stage
 COPY --from=builder /usr/local/lib /usr/local/lib
 COPY --from=builder /usr/local/include /usr/local/include
+
+# Install runtime system dependencies
+RUN apt-get update && apt-get install -y \
+    openssl \
+    ca-certificates \
+    git && \
+    rm -rf /var/lib/apt/lists/*
+
 
 # Make sure the dynamic linker can find liboqs
 ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
@@ -65,20 +64,6 @@ RUN chmod +x /app/certificates/sign_cert.sh
 # Copy application files
 COPY src /app/src/
 ENV SRC_PATH=/app/src/
-
-# Copy test scrips
-COPY tests/driver.py /app/
-COPY tests/bulk_driver.py /app/
-COPY tests/requests /app/requests/
-
-# Configuration files
-COPY config /app/config
-
-ARG TRUSTED_PEERS_INFO
-ENV TRUSTED_PEERS_INFO=/app/${TRUSTED_PEERS_INFO}
-
-ARG CFGFILE
-ENV CFGFILE=/app/${CFGFILE}
 
 # Run the application
 ENTRYPOINT ["python3", "-u", "src/hybridization_module/main.py"]

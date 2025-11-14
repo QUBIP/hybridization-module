@@ -1,13 +1,13 @@
-import socket
 import json
 import os
+import socket
 import sys
 
 # Constants
 BUFFER_SIZE = 65057
 
 # Default open_connect_request file
-OPEN_CONNECT_REQUEST_FILE = 'requests/open_connect_request.json'
+OPEN_CONNECT_REQUEST_FILE = "tests/requests/open_connect_request.json"
 
 # Check if a file name was passed as argument
 if len(sys.argv) > 1:
@@ -17,7 +17,8 @@ if not os.path.exists(OPEN_CONNECT_REQUEST_FILE):
     print(f"Error: {OPEN_CONNECT_REQUEST_FILE} does not exist")
     sys.exit(1)
 
-def load_config():
+
+def load_config() -> dict:
     """
     Load the configuration file for each node (config.json).
     """
@@ -30,15 +31,16 @@ def load_config():
         print(f"Error loading configuration: {e}")
         exit(1)
 
-def load_request(filename):
+
+def load_request(filename: str) -> dict:
     """
     Load a JSON request from a file.
     """
-    filepath = os.path.join(os.path.dirname(__file__), filename)
-    with open(filepath, 'r') as file:
+    with open(filename, "r") as file:
         return json.load(file)
 
-def send_request(socket_conn, request):
+
+def send_request(socket_conn: socket.socket, request: dict) -> dict:
     """
     Send a JSON request via the socket and return the response.
     """
@@ -49,7 +51,8 @@ def send_request(socket_conn, request):
             response = json.loads(response_bytes.decode("utf8"))
             return response
 
-def run_driver():
+
+def run_driver() -> None:
     """
     Main function for the driver.
     """
@@ -86,21 +89,16 @@ def run_driver():
                     "index": 0,
                     "metadata": {
                         "size": 46,
-                        "buffer": "The metadata field is not used for the moment."
-                    }
-                }
+                        "buffer": "The metadata field is not used for the moment.",
+                    },
+                },
             }
             gk_response = send_request(kdfix_socket, gk_request)
             print("GET_KEY response:", gk_response)
 
             #  CLOSE
             print("\n--- CLOSE ---")
-            cl_request = {
-                "command": "CLOSE",
-                "data": {
-                    "key_stream_id": key_stream_id
-                }
-            }
+            cl_request = {"command": "CLOSE", "data": {"key_stream_id": key_stream_id}}
 
             cl_response = send_request(kdfix_socket, cl_request)
             print("CLOSE response:", cl_response)
@@ -111,6 +109,7 @@ def run_driver():
         print(f"Unexpected error: {e}")
     finally:
         print("Driver execution completed.")
+
 
 if __name__ == "__main__":
     run_driver()
