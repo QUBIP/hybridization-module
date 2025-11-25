@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="kdfix",
-    version="0.8.3",
+    version="0.8.4",
     description="Hybrid Key Derivation Framework using QKD, PQC and classical KEMs",
     author="Jofi Cresta, Ramon Querol",
     package_dir={"": "src"},

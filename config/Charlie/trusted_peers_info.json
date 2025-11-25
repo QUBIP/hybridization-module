@@ -1,20 +1,17 @@
 {
     "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" : {
-        "shared_seed" : "123456789",
         "address": {
             "host" : "10.10.11.245",
             "port" : 3001
         }
     },
     "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" : {
-        "shared_seed" : "123456789",
         "address": {
             "host" : "10.10.11.246",
             "port" : 3001
         }
     },
     "cccccccc-cccc-cccc-cccc-cccccccccccc" : {
-        "shared_seed" : "123456789",
         "address": {
             "host" : "10.10.11.245",
             "port" : 3001

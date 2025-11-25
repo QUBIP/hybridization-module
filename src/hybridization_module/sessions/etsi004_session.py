@@ -8,7 +8,6 @@ import uuid
 from hybridization_module.hybridization_functions.hmac import hmac_kdf
 from hybridization_module.hybridization_functions.xorhmac import xorhmac_kdf
 from hybridization_module.hybridization_functions.xoring import xoring_kdf
-from hybridization_module.key_generation.key_emulation import generate_deterministic_aux_key
 from hybridization_module.key_generation.key_source_interface import KeySource
 from hybridization_module.key_generation.key_source_threads import (
     handle_close_thread,
@@ -247,24 +246,23 @@ class Etsi004Session:
 
         # If no keys were fetched, return an error
         if not results:
+            log.error("Failed to fetch any keys from sources. Aborting operation")
             return {"status": 1, "message": "Failed to fetch any keys from sources"}
 
         log.debug("Fetched key dict: %s", results)
-
-        # Check if key_dict has only one key, and add an auxiliary entry if needed
-        if len(results) < 2:
-            # Generate the deterministic auxiliary key
-            key_length = len(next(iter(results.values())))
-            aux_key = generate_deterministic_aux_key(self.peer.shared_seed, key_length)
-
-            # Add the auxiliary key to the dictionary as a list of lists
-            results.update({"aux": bytes(aux_key)})
-
-            log.debug("Single key hybridization not allowed. Deterministic Aux key added to hybridize")
-            log.debug("Updated Key dict with aux: %s", results)
-
-
         keys = list(results.values())
+
+        # There cannot be hybridization if there was only one key
+        if len(keys) < 2:
+            key_buffer = list(keys[0])
+
+            if len(key_buffer) > self.qos.key_chunk_size:
+                key_buffer = key_buffer[:self.qos.key_chunk_size]
+
+            log.info("Only one key was generated, no hibridization is required.")
+            log.debug("Hybrid Key: %s", key_buffer)
+            return {"status": 0, "key_buffer": key_buffer}
+
         if not all(isinstance(key, bytes) for key in keys):
             raise TypeError("All keys must be bytes.")
 
@@ -289,10 +287,7 @@ class Etsi004Session:
         log.info("Keys successfully hybridazed using %s.", self.hybrid_method)
         log.debug("Hybrid Key: %s", list(hybrid_key))
 
-        return {
-            "status": 0,
-            "key_buffer": list(hybrid_key)
-        }
+        return {"status": 0, "key_buffer": list(hybrid_key)}
 
     ### Close ###
 

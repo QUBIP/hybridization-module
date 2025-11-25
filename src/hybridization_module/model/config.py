@@ -30,7 +30,6 @@ class GeneralConfiguration(BaseModel):
 # ---- Trusted Peers info
 
 class PeerInfo(BaseModel):
-    shared_seed: str
     address: NetworkAddress
 
 
