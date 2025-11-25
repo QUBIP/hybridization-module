@@ -134,8 +134,11 @@ class PeerToPeerConnectionManager(PeerConnectionManager):
             return
 
         self._continue_listening = False
-        sock = self._connect_as_client(self.address, PeerSessionReference(type=PeerSessionType.BLINK, id="blink"))
-        sock.close()
+        try:
+            sock = self._connect_as_client(self.address, PeerSessionReference(type=PeerSessionType.BLINK, id="blink"))
+            sock.close()
+        except ssl.SSLCertVerificationError as e:
+            log.warning(f"The ssl verification during peer connector close failed, but the thread should have been closed. Error message: {e}")
 
         self._listening_thread.join()
         log.info("The peer connection manager has stopped listening as asked.")
