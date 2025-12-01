@@ -3,7 +3,6 @@ import logging
 import socket
 import ssl
 import threading
-import time
 from concurrent.futures import ThreadPoolExecutor
 from ssl import SSLContext
 
@@ -26,7 +25,7 @@ class PeerToPeerConnectionManager(PeerConnectionManager):
         self._continue_listening: bool = False
 
         self._unclaimed_sockets: dict[PeerSessionReference, socket.socket] = {}
-        self._sockets_dict_lock: threading.Lock = threading.Lock()
+        self._sockets_dict_cond_lock: threading.Condition = threading.Condition()
 
         self._server_ssl_context: SSLContext = self._setup_ssl_context(ssl.Purpose.CLIENT_AUTH, cert_config)
         self._client_ssl_context: SSLContext = self._setup_ssl_context(ssl.Purpose.SERVER_AUTH, cert_config)
@@ -50,9 +49,10 @@ class PeerToPeerConnectionManager(PeerConnectionManager):
             return
 
         message_ref = PeerSessionReference(type=session_type, id=json_message["id"])
-        with self._sockets_dict_lock:
+        with self._sockets_dict_cond_lock:
             self._unclaimed_sockets[message_ref] = new_socket
             log.info("Peer connection with reference %s registered.", message_ref)
+            self._sockets_dict_cond_lock.notify_all()
 
 
     def _listen_to_peers(self) -> None:
@@ -76,20 +76,19 @@ class PeerToPeerConnectionManager(PeerConnectionManager):
 
 
     def _connect_as_server(self, session_ref: PeerSessionReference) -> socket.socket:
-        starting_time = time.time()
         log.debug("Starting seach for session with type %s and id %s", session_ref.type, session_ref.id)
 
-        while self.timeout > time.time()-starting_time:
+        with self._sockets_dict_cond_lock:
+            self._sockets_dict_cond_lock.wait_for(lambda: session_ref in self._unclaimed_sockets, timeout=self.timeout)
+
             if session_ref in self._unclaimed_sockets:
                 log.debug("Found a socket matching the type %s and id %s.", session_ref.type, session_ref.id)
-                with self._sockets_dict_lock:
-                    secure_socket = self._unclaimed_sockets.pop(session_ref)
+                secure_socket = self._unclaimed_sockets.pop(session_ref)
 
                 secure_socket.settimeout(self.timeout)
                 secure_socket.sendall("ok".encode())
                 log.info("Peer session %s established with %s.", session_ref, secure_socket.getpeername())
                 return secure_socket
-            time.sleep(0.2)
 
         log.error("After %s seconds, the client did not connect.", self.timeout)
         raise PeerNotConnectedError("The client peer did not start the session")

@@ -38,9 +38,6 @@ from hybridization_module.peer_connector.connector_interface import PeerConnecti
 
 log = logging.getLogger(__name__)
 
-# Maximun time in seconds for each source to fetch keys
-TIMEOUT_SECONDS = 60
-
 class Etsi004Session:
 
     ### Initialization ###
